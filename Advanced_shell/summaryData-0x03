@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# This script reads Pokémon data from JSON files, generates a CSV report,
+# and calculates the average height and weight using awk.
+
+# Set the output CSV file name
+OUTPUT_CSV="pokemon_report.csv"
+
+# Check for JSON files and exit if none are found
+if ! compgen -G "*.json" > /dev/null; then
+    echo "No JSON files found in the current directory. Please ensure the files from Task 2 are here."
+    exit 1
+fi
+
+# Print the CSV header to the file, overwriting it if it already exists
+echo "Name,Height (m),Weight (kg)" > "$OUTPUT_CSV"
+
+# Loop through all JSON files in the current directory
+for file in *.json
+do
+    # Use grep and awk to extract the name, height, and weight from the JSON
+    # Grep finds the line, and awk processes it to get the value
+    name=$(grep '"name":' "$file" | awk -F'"' '{print $4}')
+    height=$(grep '"height":' "$file" | awk '{print $2}' | sed 's/,$//')
+    weight=$(grep '"weight":' "$file" | awk '{print $2}' | sed 's/,$//')
+
+    # Append the extracted data as a new row in the CSV file
+    echo "$name,$height,$weight" >> "$OUTPUT_CSV"
+done
+
+# Inform the user that the CSV report has been generated
+echo "CSV Report generated at: $OUTPUT_CSV"
+
+# Use awk to calculate the average height and weight
+# The 'NR > 1' part tells awk to skip the first line (the header)
+# 'BEGIN {FS=","}' sets the field separator to a comma
+awk 'BEGIN {FS=","} NR > 1 { total_height += $2; total_weight += $3; count++ }
+     END {
+         if (count > 0) {
+             printf "\nAverage Height: %.2f m\n", total_height/count;
+             printf "Average Weight: %.2f kg\n", total_weight/count;
+         } else {
+             print "\nNo data found to calculate averages.";
+         }
+     }' "$OUTPUT_CSV"

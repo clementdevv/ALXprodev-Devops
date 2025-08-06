@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# This script generates a CSV report and calculates
+# the average height and weight of Pokémon from JSON files.
+# It assumes you have 'jq' installed for JSON parsing.
+# To install 'jq' on Debian/Ubuntu, use: sudo apt-get install jq
+
+# --- Configuration ---
+# Set the name of the output CSV file
+OUTPUT_FILE="pokemon_report.csv"
+
+# --- Script Execution ---
+
+# 1. Generate the CSV header
+echo "Name,Height (m),Weight (kg)" > "$OUTPUT_FILE"
+
+# 2. Loop through each JSON file to extract data
+#    Assumes JSON files from Task 2 are in the current directory
+echo "Processing JSON files..."
+for file in *.json; do
+  # Use 'jq' to parse the JSON and extract the required fields.
+  # The values are formatted to a single line, separated by commas.
+  name=$(jq -r '.name' "$file")
+  # Height is in decimeters, so we convert to meters (divide by 10)
+  height=$(jq -r '.height' "$file" | awk '{print $1/10}')
+  # Weight is in hectograms, so we convert to kilograms (divide by 10)
+  weight=$(jq -r '.weight' "$file" | awk '{print $1/10}')
+
+  # Append the data to the CSV file
+  echo "$name,$height,$weight" >> "$OUTPUT_FILE"
+done
+
+# 3. Use awk to calculate and display the averages
+echo
+echo "CSV Report generated at: $OUTPUT_FILE"
+echo
+
+# Awk explanation:
+# -F',' sets the field separator to a comma.
+# NR > 1 skips the header line (record number greater than 1).
+# We sum the values in the 2nd column (height) and 3rd column (weight).
+# END block runs after all lines are processed.
+# It prints the average by dividing the sum by the total number of lines processed (NR-1, to account for the skipped header).
+awk -F',' 'NR > 1 { sum_h+=$2; sum_w+=$3 } END {
+  printf "Average Height: %.2f m\n", sum_h/(NR-1);
+  printf "Average Weight: %.2f kg\n", sum_w/(NR-1)
+}' "$OUTPUT_FILE"
+

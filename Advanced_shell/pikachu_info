@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# 1. Get Pikachu's data from the API and save to pikachu.json
+curl -s https://pokeapi.co/api/v2/pokemon/pikachu > pikachu.json
+
+# 2. Extract the required values using jq
+name=$(jq -r '.name | ascii_upcase' pikachu.json)
+type=$(jq -r '.types[0].type.name | ascii_upcase' pikachu.json)
+weight=$(jq -r '.weight' pikachu.json)
+height=$(jq -r '.height' pikachu.json)
+
+# 3. Format height and weight
+formatted_weight=$(echo "scale=1; $weight / 10" | bc)
+formatted_height=$(echo "scale=1; $height / 10" | bc)
+
+# 4. Print the output
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."

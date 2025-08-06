@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Set output files
+OUTPUT_FILE="data.json"
+ERROR_FILE="errors.txt"
+
+# Make the API request
+curl -s -w "%{http_code}" "https://pokeapi.co/api/v2/pokemon/pikachu" -o "$OUTPUT_FILE" > http_status.txt
+
+# Read the status code
+STATUS_CODE=$(cat http_status.txt)
+
+# Handle response
+if [ "$STATUS_CODE" -ne 200 ]; then
+  echo "Request failed with status code $STATUS_CODE" > "$ERROR_FILE"
+  rm -f "$OUTPUT_FILE" # Remove bad json if exists
+else
+  echo "Request successful. Data saved to $OUTPUT_FILE"
+fi
+
+# Clean up
+rm -f http_status.txt
